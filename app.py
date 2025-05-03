@@ -2,54 +2,74 @@ import streamlit as st
 import pandas as pd
 import quantum
 
+# セッションステートの初期化
+if 'download_template' not in st.session_state:
+    st.session_state.download_template = False
+
+# 表示ボタンのコールバック
+def show_download_template():
+    st.session_state.download_template = True
+
+# 閉じるボタンのコールバック
+def hide_download_template():
+    st.session_state.download_template = False
+
 def main():
     st.title("グループ分け")
     st.write("---")
     token = st.secrets["FIXSTARS_API_KEY"]
 
-    st.markdown("### CSV のフォーマットをダウンロード")
-    # 部署テンプレート
-    dept_cols = [
-        "部署ID", "部署", "スキル１", "スキル２", "スキル３", "定員人数"
-    ]
-    df_dept = pd.DataFrame(columns=dept_cols)
-    csv_dept = df_dept.to_csv(index=False).encode("utf-8-sig")
-    st.download_button(
-        label="部署データのテンプレートをダウンロード",
-        data=csv_dept,
-        file_name="部署テンプレート.csv",
-        mime="text/csv"
-    )
+    # CSVのフォーマットをダウンロード
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button("CSV のフォーマットをダウンロード", on_click=show_download_template)
+    with col2:
+        st.button("閉じる", on_click=hide_download_template)
+    
+    if st.session_state.download_template:
+        # 部署テンプレート
+        dept_cols = [
+            "部署ID", "部署", "スキル１", "スキル２", "スキル３", "定員人数"
+        ]
+        df_dept = pd.DataFrame(columns=dept_cols)
+        csv_dept = df_dept.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            label="部署データのテンプレートをダウンロード",
+            data=csv_dept,
+            file_name="部署テンプレート.csv",
+            mime="text/csv"
+        )
 
-    # 既存社員テンプレート
-    mem_cols = [
-        "社員番号", "名前", "部署", "リーダー",
-        "開放性", "誠実性", "外向性", "協調性", "神経症傾向", 
-        "スキル１", "スキル２", "スキル３"
-    ]
-    df_mem = pd.DataFrame(columns=mem_cols)
-    csv_mem = df_mem.to_csv(index=False).encode("utf-8-sig")
-    st.download_button(
-        label="既存社員データのテンプレートをダウンロード",
-        data=csv_mem,
-        file_name="既存社員テンプレート.csv",
-        mime="text/csv"
-    )
+        # 既存社員テンプレート
+        mem_cols = [
+            "社員番号", "名前", "部署", "リーダー",
+            "開放性", "誠実性", "外向性", "協調性", "神経症傾向", 
+            "スキル１", "スキル２", "スキル３"
+        ]
+        df_mem = pd.DataFrame(columns=mem_cols)
+        csv_mem = df_mem.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            label="既存社員データのテンプレートをダウンロード",
+            data=csv_mem,
+            file_name="既存社員テンプレート.csv",
+            mime="text/csv"
+        )
 
-    # 新卒社員テンプレート
-    emp_cols = [
-        "社員番号", "名前", "開放性", "誠実性", "外向性", "協調性",
-        "神経症傾向", "スキル１", "スキル２", "スキル３",
-        "第一希望", "第二希望", "第三希望"
-    ]
-    df_emp = pd.DataFrame(columns=emp_cols)
-    csv_emp = df_emp.to_csv(index=False).encode("utf-8-sig")
-    st.download_button(
-        label="新卒社員データのテンプレートをダウンロード",
-        data=csv_emp,
-        file_name="新卒社員テンプレート.csv",
-        mime="text/csv"
-    )
+        # 新卒社員テンプレート
+        emp_cols = [
+            "社員番号", "名前", "開放性", "誠実性", "外向性", "協調性",
+            "神経症傾向", "スキル１", "スキル２", "スキル３",
+            "第一希望", "第二希望", "第三希望"
+        ]
+        df_emp = pd.DataFrame(columns=emp_cols)
+        csv_emp = df_emp.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            label="新卒社員データのテンプレートをダウンロード",
+            data=csv_emp,
+            file_name="新卒社員テンプレート.csv",
+            mime="text/csv"
+        )
+
     st.write("---")
 
     # CSVアップロード
