@@ -96,7 +96,7 @@ def main():
             st.warning("全てのCSVファイルをアップロードしてください。")
         else:
             try:
-                result_df = quantum.optimize(
+                assign_df, dept_comp_all = quantum.optimize(
                     token,
                     group_file,
                     member_file,
@@ -107,10 +107,13 @@ def main():
                     weight_skill,
                     weight_pref,
                 )
-                st.success("最適化が完了しました。")
-                st.dataframe(result_df)
+                st.dataframe(assign_df)
+                
+                for grp in dept_comp_all:
+                    st.markdown(f"## {grp} 全体の相性")
+                    st.dataframe(dept_comp_all[grp])
             except Exception as e:
-                st.error("量子アニーリングによる最適化の実行に失敗しました。エラーログを確認してください。")
+                st.error(f"量子アニーリング実行中にエラーが発生しました: {e}")
 
 if __name__ == '__main__':
     main()
