@@ -114,6 +114,33 @@ def main():
                     st.dataframe(dept_comp_all[grp])
             except Exception as e:
                 st.error(f"量子アニーリング実行中にエラーが発生しました: {e}")
+    st.write("---")
+
+    # サンプルの実行
+    if st.button("サンプルを実行"):
+        # sample フォルダ内のファイルパスを指定
+        group_file    = "sample/部署テンプレート.csv"
+        member_file   = "sample/既存社員テンプレート.csv"
+        employee_file = "sample/新卒社員テンプレート.csv"
+        try:
+            assign_df, dept_comp_all = quantum.optimize(
+                token,
+                group_file,
+                member_file,
+                employee_file,
+                well_suited_leader,
+                well_suited_member,
+                weight_char,
+                weight_skill,
+                weight_pref,
+            )
+            st.dataframe(assign_df)
+                
+            for grp in dept_comp_all:
+                st.markdown(f"## {grp} 全体の相性")
+                st.dataframe(dept_comp_all[grp])
+        except Exception as e:
+            st.error(f"量子アニーリング実行中にエラーが発生しました: {e}")
 
 if __name__ == '__main__':
     main()
