@@ -33,6 +33,7 @@ def main():
     # タブで画面切り替え
     tab1, tab2 = st.tabs(["ファイルで実行", "サンプルで実行"])
 
+    # ── Tab1: 通常アップロード or サンプル実行 ──
     with tab1:
         # CSVのフォーマットをダウンロード
         col1, col2 = st.columns(2)
@@ -104,34 +105,43 @@ def main():
             if group_file is None or member_file is None or employee_file is None:
                 st.warning("全てのCSVファイルをアップロードしてください。")
             else:
-                try:
-                    assign_df, dept_comp_all = quantum.optimize(
-                        token,
-                        group_file,
-                        member_file,
-                        employee_file,
-                        st.session_state.leader,
-                        st.session_state.member,
-                        st.session_state.char,
-                        st.session_state.skill,
-                        st.session_state.pref
-                    )
-                    st.dataframe(assign_df)
-                    
-                    for grp in dept_comp_all:
-                        st.markdown(f"## {grp} 全体の相性")
-                        st.dataframe(dept_comp_all[grp])
-                except Exception as e:
-                    st.error(f"量子アニーリング実行中にエラーが発生しました: {e}")
+                run_opt(
+                    token,
+                    group_file, member_file, employee_file,
+                    st.session_state.leader,
+                    st.session_state.member,
+                    st.session_state.char,
+                    st.session_state.skill,
+                    st.session_state.pref
+                )
         st.write("---")
 
+    # ── Tab2: サンプル編集＆実行 ──
+    # セッションに保存領域を用意
+    for key in ("saved_dept","saved_mem","saved_emp"):
+        if key not in st.session_state:
+            st.session_state[key] = None
 
     with tab2:
-        st.markdown("### サンプル CSV を編集")
-        # sample フォルダの CSV を読み込み
-        edited_dept  = pd.read_csv("sample/部署テンプレート.csv")
-        edited_mem   = pd.read_csv("sample/既存社員テンプレート.csv")
-        edited_emp   = pd.read_csv("sample/新卒社員テンプレート.csv")
+        # オリジナル or セッション保存版
+        if st.session_state.saved_dept is not None:
+            df_dept = st.session_state.saved_dept
+        else:
+            df_dept = pd.read_csv("sample/部署テンプレート.csv")
+
+        if st.session_state.saved_mem is not None:
+            df_mem = st.session_state.saved_mem
+        else:
+            df_mem = pd.read_csv("sample/既存社員テンプレート.csv")
+
+        if st.session_state.saved_emp is not None:
+            df_emp = st.session_state.saved_emp
+        else:
+            df_emp = pd.read_csv("sample/新卒社員テンプレート.csv")
+
+        edited_dept = df_dept.copy()
+        edited_mem  = df_mem.copy()
+        edited_emp  = df_emp.copy()
 
         # 編集を行う
         col1, col2 = st.columns(2)
@@ -145,28 +155,25 @@ def main():
                       key="close_editor")
         if st.session_state.editor:
             st.markdown("#### 部署テンプレート")
-            edited_dept = st.data_editor(edited_dept, num_rows="dynamic", key="edt_dept")
+            edited_dept = st.data_editor(df_dept, num_rows="dynamic", key="edt_dept")
             st.markdown("#### 既存社員テンプレート")
-            edited_mem  = st.data_editor(edited_mem,  num_rows="dynamic", key="edt_mem")
+            edited_mem  = st.data_editor(df_mem,  num_rows="dynamic", key="edt_mem")
             st.markdown("#### 新卒社員テンプレート")
-            edited_emp  = st.data_editor(edited_emp,  num_rows="dynamic", key="edt_emp")
+            edited_emp  = st.data_editor(df_emp,  num_rows="dynamic", key="edt_emp")
 
             # 保存ボタン
             if st.button("保存する", key="save_edited"):
                 # session_state から取り出して sample フォルダへ上書き
-                edited_dept.to_csv("sample/部署テンプレート.csv",
-                                                index=False, encoding="utf-8-sig")
-                edited_mem.to_csv("sample/既存社員テンプレート.csv",
-                                                index=False, encoding="utf-8-sig")
-                edited_emp.to_csv("sample/新卒社員テンプレート.csv",
-                                                index=False, encoding="utf-8-sig")
-                st.success("sample フォルダ内の CSV を保存しました。")
+                st.session_state.saved_dept = edited_dept.copy()
+                st.session_state.saved_mem  = edited_mem.copy()
+                st.session_state.saved_emp  = edited_emp.copy()
+                st.success("変更が完了しました")
         st.write("---")
 
         # 編集結果をダウンロード
         col3, col4 = st.columns(2)
         with col3:
-            st.button("編集したCSVをダウンロード", on_click=set_state,
+            st.button("編集したサンプルをダウンロード", on_click=set_state,
                       args=("download_edit", True),
                       key="show_edit")
         with col4:
@@ -184,26 +191,50 @@ def main():
 
 
         # サンプルの実行
-        if st.button("サンプルを実行", key="run_edt"):
-            try:
-                assign_df, dept_comp_all = quantum.optimize(
-                    token,
-                    "sample/部署テンプレート.csv",
-                    "sample/既存社員テンプレート.csv",
-                    "sample/新卒社員テンプレート.csv",
-                    st.session_state.leader,
-                    st.session_state.member,
-                    st.session_state.char,
-                    st.session_state.skill,
-                    st.session_state.pref
-                )
-                st.dataframe(assign_df)
-                    
-                for grp in dept_comp_all:
-                    st.markdown(f"## {grp} 全体の相性")
-                    st.dataframe(dept_comp_all[grp])
-            except Exception as e:
-                st.error(f"量子アニーリング実行中にエラーが発生しました: {e}")
+        if st.button("最適化を実行", key="run_edt"):
+            # DataFrame → CSV text → StringIO
+            def to_buf(df):
+                buf = io.StringIO()
+                df.to_csv(buf, index=False)
+                buf.seek(0)
+                return buf
+            buf_dept = to_buf(st.session_state.saved_dept if st.session_state.saved_dept is not None else df_dept)
+            buf_mem  = to_buf(st.session_state.saved_mem  if st.session_state.saved_mem  is not None else df_mem)
+            buf_emp  = to_buf(st.session_state.saved_emp  if st.session_state.saved_emp  is not None else df_emp)
+            run_opt(
+                token,
+                buf_dept, buf_mem, buf_emp,
+                st.session_state.leader,
+                st.session_state.member,
+                st.session_state.char,
+                st.session_state.skill,
+                st.session_state.pref
+            )
+        st.write("---")
+
+def run_opt(token, group_file, member_file, employee_file,
+            well_suited_leader, well_suited_member,
+            weight_char, weight_skill, weight_pref):
+    """quantum.optimize を呼び出して結果表示"""
+    try:
+        assign_df, dept_comp_all, dept_skill = quantum.optimize(
+            token,
+            group_file, member_file, employee_file,
+            well_suited_leader, well_suited_member,
+            weight_char, weight_skill, weight_pref
+        )
+        st.success("最適化完了")
+        st.dataframe(assign_df)
+        st.markdown("### 部署別 相性")
+        for grp, mat in dept_comp_all.items():
+            st.markdown(f"**{grp}**")
+            st.dataframe(mat)
+        st.markdown("### 部署別 スキル要件と配属新卒スキル")
+        for grp, df in dept_skill.items():
+            st.markdown(f"{grp}")
+            st.dataframe(df)
+    except Exception as e:
+        st.error(f"量子アニーリング実行中にエラーが発生しました: {e}")
 
 if __name__ == '__main__':
     main()

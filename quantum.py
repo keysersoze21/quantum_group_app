@@ -79,13 +79,13 @@ def optimize(
                 # リーダー⇔新卒
                 L = leaders[grp]
                 if L.size:
-                    ls = int((L * pi).sum()) if well_suited_leader == "同一性重視" else int(np.logical_xor(L, pi).sum())
+                    ls = int(np.logical_or(L, pi).sum()) if well_suited_leader == "同一性重視" else int(np.logical_xor(L, pi).sum())
                 else:
                     ls = 0
                 # メンバー⇔新卒
                 M = members[grp]
                 if M.size:
-                    ms = int((M * pi).sum()) if well_suited_member == "同一性重視" else int(np.logical_xor(M, pi).sum())
+                    ms = int(np.logical_or(M, pi).sum()) if well_suited_member == "同一性重視" else int(np.logical_xor(M, pi).sum())
                 else:
                     ms = 0
                 personality = ls + ms
@@ -180,8 +180,34 @@ def optimize(
 
         # 切り出し
         if names_grp:
-            dept_comp_all[grp] = comp_all.loc[names_grp, names_grp]
+            df = comp_all.loc[names_grp, names_grp].copy()
+            # 対角成分（自分自身の相性）を空文字にする
+            df = df.astype(object)  # 文字列混在を許可
+            for n in df.index:
+                df.at[n, n] = ""
+            dept_comp_all[grp] = df
         else:
             dept_comp_all[grp] = pd.DataFrame()
 
-    return assign_df, dept_comp_all
+    # 11. 各部署ごとのスキル要件 ＋ 配属新卒のスキル表
+    skill_cols = group_df.columns[2:5].tolist()  # e.g. ["スキルA","スキルB","スキルC"]
+    dept_skill = {}
+    for (gid, grp), req_bits in zip(zip(group_ids, group_names), group_skill):
+        rows = []
+        # 部署要件行
+        req_row = {"": "必要スキル"}
+        for idx, col in enumerate(skill_cols):
+            req_row[col] = int(req_bits[idx])
+        rows.append(req_row)
+
+        # 配属された新卒社員行
+        for i, g in assigned_idx:
+            if group_names[g] == grp:
+                emp_row = {"": new_names[i]}
+                for idx, col in enumerate(skill_cols):
+                    emp_row[col] = int(new_skill[i, idx])
+                rows.append(emp_row)
+
+        dept_skill[grp] = pd.DataFrame(rows)
+
+    return assign_df, dept_comp_all, dept_skill
