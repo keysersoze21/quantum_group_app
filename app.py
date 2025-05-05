@@ -7,28 +7,9 @@ import quantum
 for key in ("download_template", "editor", "download_edit"):
     st.session_state.setdefault(key, False)
 
+# 表示ボタンと閉じるボタンの設定
 def set_state(key: str, value: bool):
     st.session_state[key] = value
-
-# 表示ボタンのコールバック
-def show_download_template():
-    st.session_state.download_template = True
-
-def show_editor():
-    st.session_state.editor = True
-
-def show_download_edit():
-    st.session_state.download_edit = True
-
-# 閉じるボタンのコールバック
-def hide_download_template():
-    st.session_state.download_template = False
-
-def hide_editor():
-    st.session_state.editor = False
-
-def hide_download_edit():
-    st.session_state.download_edit = False
 
 def main():
     st.title("グループ分け")
@@ -36,7 +17,7 @@ def main():
     token = st.secrets["FIXSTARS_API_KEY"]
 
     # ── 共通パラメータ入力 ──
-    st.markdown("## パラメータ設定")
+    st.markdown("## 詳細設定")
     well_suited_leader = st.radio(
         "リーダー/メンバー相性", ["多様性重視","同一性重視"],
         horizontal=True, key="leader"
@@ -164,11 +145,22 @@ def main():
                       key="close_editor")
         if st.session_state.editor:
             st.markdown("#### 部署テンプレート")
-            edited_dept = st.data_editor(edited_dept, num_rows="dynamic", key="edt_1")
+            edited_dept = st.data_editor(edited_dept, num_rows="dynamic", key="edt_dept")
             st.markdown("#### 既存社員テンプレート")
-            edited_mem  = st.data_editor(edited_mem,  num_rows="dynamic", key="edt_2")
+            edited_mem  = st.data_editor(edited_mem,  num_rows="dynamic", key="edt_mem")
             st.markdown("#### 新卒社員テンプレート")
-            edited_emp  = st.data_editor(edited_emp,  num_rows="dynamic", key="edt_3")
+            edited_emp  = st.data_editor(edited_emp,  num_rows="dynamic", key="edt_emp")
+
+            # 保存ボタン
+            if st.button("保存する", key="save_edited"):
+                # session_state から取り出して sample フォルダへ上書き
+                edited_dept.to_csv("sample/部署テンプレート.csv",
+                                                index=False, encoding="utf-8-sig")
+                edited_mem.to_csv("sample/既存社員テンプレート.csv",
+                                                index=False, encoding="utf-8-sig")
+                edited_emp.to_csv("sample/新卒社員テンプレート.csv",
+                                                index=False, encoding="utf-8-sig")
+                st.success("sample フォルダ内の CSV を保存しました。")
         st.write("---")
 
         # 編集結果をダウンロード
@@ -193,25 +185,12 @@ def main():
 
         # サンプルの実行
         if st.button("サンプルを実行", key="run_edt"):
-            # DataFrame → CSV テキスト → StringIO（pd.read_csv が読めるように）
-            buf_dept = io.StringIO()
-            edited_dept.to_csv(buf_dept, index=False)
-            buf_dept.seek(0)
-
-            buf_mem = io.StringIO()
-            edited_mem.to_csv(buf_mem, index=False)
-            buf_mem.seek(0)
-
-            buf_emp = io.StringIO()
-            edited_emp.to_csv(buf_emp, index=False)
-            buf_emp.seek(0)
-
             try:
                 assign_df, dept_comp_all = quantum.optimize(
                     token,
-                    buf_dept,
-                    buf_mem,
-                    buf_emp,
+                    "sample/部署テンプレート.csv",
+                    "sample/既存社員テンプレート.csv",
+                    "sample/新卒社員テンプレート.csv",
                     st.session_state.leader,
                     st.session_state.member,
                     st.session_state.char,
