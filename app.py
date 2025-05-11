@@ -12,7 +12,7 @@ def set_state(key: str, value: bool):
     st.session_state[key] = value
 
 def main():
-    st.title("グループ分け")
+    st.title("上司と部下のマッチング")
     st.write("---")
     token = st.secrets["FIXSTARS_API_KEY"]
 
@@ -154,11 +154,11 @@ def main():
                       args=("editor", False),
                       key="close_editor")
         if st.session_state.editor:
-            st.markdown("#### 部署テンプレート")
+            st.markdown("#### 部署サンプル")
             edited_dept = st.data_editor(df_dept, num_rows="dynamic", key="edt_dept")
-            st.markdown("#### 既存社員テンプレート")
+            st.markdown("#### 既存社員サンプル")
             edited_mem  = st.data_editor(df_mem,  num_rows="dynamic", key="edt_mem")
-            st.markdown("#### 新卒社員テンプレート")
+            st.markdown("#### 新卒社員サンプル")
             edited_emp  = st.data_editor(df_emp,  num_rows="dynamic", key="edt_emp")
 
             # 保存ボタン
