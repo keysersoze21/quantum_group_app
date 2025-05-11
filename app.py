@@ -228,13 +228,33 @@ def run_opt(token, group_file, member_file, employee_file,
         st.markdown("### 部署別 相性")
         for grp, mat in dept_comp_all.items():
             st.markdown(f"**{grp}**")
-            st.dataframe(mat)
+            styled_mat = mat.style.applymap(color_map)  # ここでスタイル付与
+            st.dataframe(styled_mat)
         st.markdown("### 部署別 スキル要件と配属新卒スキル")
         for grp, df in dept_skill.items():
             st.markdown(f"{grp}")
             st.dataframe(df)
     except Exception as e:
         st.error(f"量子アニーリング実行中にエラーが発生しました: {e}")
+
+# カラーマッピング用の関数
+def color_map(val):
+    try:
+        val = int(val)  # 文字列でも数値化
+        if val == 0 or val == 1:
+            return 'background-color: #FFCCCC'
+        elif 2 <= val <= 5:
+            # 緑色濃淡計算（2〜5の範囲でグラデーション）
+            scale = (val - 2) / (5 - 2)  # 0.0 ～ 1.0
+            base = 230  # 最も薄い緑
+            range_ = 80  # 濃さの変化幅
+            green_value = int(base - scale * range_)  # 230 → 150
+            color_code = f'background-color: rgb({green_value}, 255, {green_value})'
+            return color_code
+        else:
+            return ''
+    except:
+        return ''  # 数値変換できなければ無色
 
 if __name__ == '__main__':
     main()
