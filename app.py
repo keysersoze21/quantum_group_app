@@ -57,7 +57,7 @@ def main():
             st.download_button(
                 label="部署データのテンプレートをダウンロード",
                 data=csv_dept,
-                file_name="部署テンプレート.csv",
+                file_name="department_template.csv",
                 mime="text/csv"
             )
 
@@ -72,7 +72,7 @@ def main():
             st.download_button(
                 label="既存社員データのテンプレートをダウンロード",
                 data=csv_mem,
-                file_name="既存社員テンプレート.csv",
+                file_name="member_template.csv",
                 mime="text/csv"
             )
 
@@ -87,13 +87,17 @@ def main():
             st.download_button(
                 label="新卒社員データのテンプレートをダウンロード",
                 data=csv_emp,
-                file_name="新卒社員テンプレート.csv",
+                file_name="employee_template.csv",
                 mime="text/csv"
             )
 
         st.write("---")
 
         # CSVアップロード
+        st.info("""
+        ⚠ アップロードするCSVファイルの **ファイル名に日本語を使用しないでください**。  
+        半角英数字のみを使った名前に変更してください。
+        """)
         group_file = st.file_uploader("部署データのCSVをアップロード", type=["csv"])
         member_file = st.file_uploader("既存社員のCSVをアップロード", type=["csv"])
         employee_file = st.file_uploader("新卒社員データのCSVをアップロード", type=["csv"])
@@ -182,11 +186,11 @@ def main():
                       key="close_edit")
         if st.session_state.download_edit:
             csv1 = edited_dept.to_csv(index=False).encode("utf-8-sig")
-            st.download_button("部署CSVダウンロード", data=csv1, file_name="編集済み部署.csv")
+            st.download_button("部署CSVダウンロード", data=csv1, file_name="edited_department_data.csv")
             csv2 = edited_mem.to_csv(index=False).encode("utf-8-sig")
-            st.download_button("既存社員CSVダウンロード", data=csv2, file_name="編集済み既存社員.csv")
+            st.download_button("既存社員CSVダウンロード", data=csv2, file_name="edited_member_data.csv")
             csv3 = edited_emp.to_csv(index=False).encode("utf-8-sig")
-            st.download_button("新卒CSVダウンロード", data=csv3, file_name="編集済み新卒社員.csv")
+            st.download_button("新卒CSVダウンロード", data=csv3, file_name="edited_employee_data.csv")
         st.write("---")
 
 
