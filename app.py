@@ -253,7 +253,8 @@ def run_opt(token, group_file, member_file, employee_file,
         st.markdown("### 部署別 スキル要件と配属新卒スキル")
         for grp, df in dept_skill.items():
             st.markdown(f"{grp}")
-            st.dataframe(df)
+            styled_skill_map = style_skill_df(df)
+            st.dataframe(styled_skill_map)
     except Exception as e:
         st.error(f"量子アニーリング実行中にエラーが発生しました: {e}")
 
@@ -283,7 +284,7 @@ def show_warning(label):
     }
     st.markdown(description[label])
 
-# カラーマッピング用の関数
+# 性格相性の色付け
 def color_map(val):
     try:
         val = int(val)  # 文字列でも数値化
@@ -301,6 +302,32 @@ def color_map(val):
             return ''
     except:
         return ''  # 数値変換できなければ無色
+    
+# スキル要件の色付け
+def skill_color_map(val, col_idx, required):
+    try:
+        val = int(val)
+        req = int(required[col_idx])
+        if req == 1:
+            if val == 1:
+                return 'background-color: #A8E6A1'  # 緑
+            elif val == 0:
+                return 'background-color: #F5B7B1'  # 赤
+        return ''
+    except:
+        return ''
+
+def style_skill_df(df):
+    required = df.iloc[0].tolist()  # スキル要件行
+    def apply_color(val, row_idx, col_idx):
+        if row_idx == 0:
+            return ''
+        return skill_color_map(val, col_idx, required)
+
+    return df.style.apply(lambda row: [
+        apply_color(val, row.name, col_idx)
+        for col_idx, val in enumerate(row)
+    ], axis=1)
 
 if __name__ == '__main__':
     main()
