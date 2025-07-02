@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import io
-import quantum
+import quantum # quantum.py
 
 # セッションステートの初期化
 for key in ("download_template", "editor", "download_edit"):
@@ -227,6 +227,7 @@ def run_opt(token, group_file, member_file, employee_file,
             well_suited_leader, well_suited_member,
             weight_char, weight_skill, weight_pref
         )
+        
         st.success("最適化完了")
         st.dataframe(assign_df)
 
