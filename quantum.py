@@ -2,6 +2,7 @@
 
 import pandas as pd
 import numpy as np
+import plotly.express as px
 from amplify import (
     VariableGenerator,
     Poly,
@@ -227,12 +228,31 @@ def optimize(
             count_none += 1
 
     # 割合をパーセンテージで表示
-    ratio_info = {
+    '''ratio_info = {
         "第一希望": f"{count_1st / total * 100:.1f}%",
         "第二希望": f"{count_2nd / total * 100:.1f}%",
         "第三希望": f"{count_3rd / total * 100:.1f}%",
         "希望外":   f"{count_none / total * 100:.1f}%",
     }
+    '''
 
+    ratio_info = pd.DataFrame({
+        "選択": ["第一希望", "第二希望", "第三希望", "希望外"],
+        "人数": [count_1st, count_2nd, count_3rd, count_none]
+    })
 
-    return assign_df, dept_comp_all, dept_skill, ratio_info
+    ratio_fig = px.pie(
+        ratio_info,
+        names           = "選択",
+        values          = "人数",
+        hole            = 0.2,
+        category_orders = {"選択": ["第一希望", "第二希望", "第三希望", "希望外"]}
+    )
+
+    ratio_fig.update_traces(
+        sort      = False,
+        direction = "clockwise",
+        rotation  = 0
+    )
+
+    return assign_df, dept_comp_all, dept_skill, ratio_fig

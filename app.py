@@ -221,7 +221,7 @@ def run_opt(token, group_file, member_file, employee_file,
             weight_char, weight_skill, weight_pref):
     """quantum.optimize を呼び出して結果表示"""
     try:
-        assign_df, dept_comp_all, dept_skill, ratio_info = quantum.optimize(
+        assign_df, dept_comp_all, dept_skill, ratio_fig = quantum.optimize(
             token,
             group_file, member_file, employee_file,
             well_suited_leader, well_suited_member,
@@ -229,18 +229,20 @@ def run_opt(token, group_file, member_file, employee_file,
         )
         st.success("最適化完了")
         st.dataframe(assign_df)
+
+        st.markdown("### 希望達成率")
+        st.plotly_chart(ratio_fig, use_container_width=True)
+
         st.markdown("### 部署別 相性")
         for grp, mat in dept_comp_all.items():
             st.markdown(f"**{grp}**")
             styled_mat = mat.style.applymap(color_map)  # ここでスタイル付与
             st.dataframe(styled_mat)
+
         st.markdown("### 部署別 スキル要件と配属新卒スキル")
         for grp, df in dept_skill.items():
             st.markdown(f"{grp}")
             st.dataframe(df)
-        st.markdown("### 希望達成率")
-        for k, v in ratio_info.items():
-            st.write(f"- {k}: {v}")
     except Exception as e:
         st.error(f"量子アニーリング実行中にエラーが発生しました: {e}")
 
