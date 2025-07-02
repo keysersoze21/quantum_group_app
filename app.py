@@ -98,6 +98,13 @@ def main():
         ⚠ アップロードするCSVファイルの **ファイル名に日本語を使用しないでください**。  
         半角英数字のみを使った名前に変更してください。
         """)
+        with st.popover("注意！！"):
+                st.markdown("# 部署データ")
+                show_warning("部署")
+                st.markdown("# 既存社員データ")
+                show_warning("既存社員")
+                st.markdown("# 新卒社員データ")
+                show_warning("新卒社員")
         group_file = st.file_uploader("部署データのCSVをアップロード", type=["csv"])
         member_file = st.file_uploader("既存社員のCSVをアップロード", type=["csv"])
         employee_file = st.file_uploader("新卒社員データのCSVをアップロード", type=["csv"])
@@ -158,11 +165,14 @@ def main():
                       args=("editor", False),
                       key="close_editor")
         if st.session_state.editor:
-            st.markdown("#### 部署サンプル")
+            with st.popover("部署サンプル"):
+                show_warning("部署")
             edited_dept = st.data_editor(df_dept, num_rows="dynamic", key="edt_dept")
-            st.markdown("#### 既存社員サンプル")
+            with st.popover("既存社員サンプル"):
+                show_warning("既存社員")
             edited_mem  = st.data_editor(df_mem,  num_rows="dynamic", key="edt_mem")
-            st.markdown("#### 新卒社員サンプル")
+            with st.popover("新卒社員サンプル"):
+                show_warning("新卒社員")
             edited_emp  = st.data_editor(df_emp,  num_rows="dynamic", key="edt_emp")
 
             # 保存ボタン
@@ -227,7 +237,7 @@ def run_opt(token, group_file, member_file, employee_file,
             well_suited_leader, well_suited_member,
             weight_char, weight_skill, weight_pref
         )
-        
+
         st.success("最適化完了")
         st.dataframe(assign_df)
 
@@ -246,6 +256,32 @@ def run_opt(token, group_file, member_file, employee_file,
             st.dataframe(df)
     except Exception as e:
         st.error(f"量子アニーリング実行中にエラーが発生しました: {e}")
+
+# 注意事項を表示
+def show_warning(label):
+    '''
+    description内の「部署」、「既存社員」、「新卒社員」の注意事項を表示する
+    '''
+    description = {
+        "部署": """
+        - 各行が1つの部署を表します。  
+        - 「部署ID」は一意である必要があります。  
+        - 「スキル１～３」はその部署で必要とされるスキルを 0 または 1 で入力します。  
+        - 「定員人数」はその部署に配属できる新卒社員数の上限です。
+        """,
+        "既存社員": """
+        - 既存社員の情報を入力します。  
+        - 「リーダー」は1ならリーダー、0ならメンバーです。  
+        - 性格とスキルは 0 または 1 の整数値を入力します。  
+        - 所属部署は「部署ID」で指定してください。
+        """,
+        "新卒社員": """
+        - 新卒社員の性格・スキル・希望部署の情報を入力します。  
+        - 希望は「部署ID」で記入してください。  
+        - スキル・性格ともに 0 または 1 を使用します。
+        """
+    }
+    st.markdown(description[label])
 
 # カラーマッピング用の関数
 def color_map(val):
