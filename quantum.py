@@ -212,9 +212,7 @@ def optimize(
         dept_skill[grp] = pd.DataFrame(rows)
 
     # 12. 希望一致率の計算
-    total = len(assigned_idx)
     count_1st = count_2nd = count_3rd = count_none = 0
-
     for i, g in assigned_idx:
         assigned_gid = group_ids[g]
         prefs = prefs_raw[i]
@@ -227,15 +225,7 @@ def optimize(
         else:
             count_none += 1
 
-    # 割合をパーセンテージで表示
-    '''ratio_info = {
-        "第一希望": f"{count_1st / total * 100:.1f}%",
-        "第二希望": f"{count_2nd / total * 100:.1f}%",
-        "第三希望": f"{count_3rd / total * 100:.1f}%",
-        "希望外":   f"{count_none / total * 100:.1f}%",
-    }
-    '''
-
+    # 希望通りの割合
     ratio_info = pd.DataFrame({
         "選択": ["第一希望", "第二希望", "第三希望", "希望外"],
         "人数": [count_1st, count_2nd, count_3rd, count_none]
