@@ -244,17 +244,15 @@ def run_opt(token, group_file, member_file, employee_file,
         st.markdown("### 希望達成率")
         st.plotly_chart(ratio_fig, use_container_width=True)
 
-        st.markdown("### 部署別 相性")
-        for grp, mat in dept_comp_all.items():
-            st.markdown(f"**{grp}**")
-            styled_mat = mat.style.applymap(color_map)  # ここでスタイル付与
-            st.dataframe(styled_mat)
-
-        st.markdown("### 部署別 スキル要件と配属新卒スキル")
-        for grp, df in dept_skill.items():
-            st.markdown(f"{grp}")
-            styled_skill_map = style_skill_df(df)
-            st.dataframe(styled_skill_map)
+        st.markdown("### 部署別 相性とスキル要件")
+        for (grp, mat), (_, df) in zip(dept_comp_all.items(), dept_skill.items()):
+            with st.popover(f"{grp}", use_container_width=True):
+                st.markdown("相性")
+                styled_mat = mat.style.applymap(color_map)  # ここでスタイル付与
+                st.dataframe(styled_mat)
+                st.markdown("スキル要件")
+                styled_skill_map = style_skill_df(df) # ここでスタイル付与
+                st.dataframe(styled_skill_map)
     except Exception as e:
         st.error(f"量子アニーリング実行中にエラーが発生しました: {e}")
 
